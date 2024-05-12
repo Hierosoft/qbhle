@@ -1,18 +1,24 @@
-# qbhle
-QBHLE High-Level Emulator (formerly BluffBASIC) is for running QBASIC programs like console emulators run games:
+# QBHLE
+QBHLE High-Level Emulator (formerly BluffBASIC)
 
-Project status: planning
-- I've done a lot of work on parsers, and learned I should be using an existing lexer and/or parser system instead to avoid repeating work
-  - or ANTLR or Lark, but in this case, YACC since there is a pure Python implementation which prevents cross-platform maintenance issues. See <https://github.com/Hierosoft/qbhle/issues/1>.
+Run QBasic programs using modern conventions.
 
-High-level emulation means improving the quality or convenience of the program while avoiding overhead & complexity of emulating low-level operations. In practice:
+High-level emulation (HLE) means avoiding overhead & complexity of emulating low-level operations, while potentially improving the quality. HLE is the way some console emulators run games and make them look better. Examples specific to QBHLE:
 - Use a modern sound library when the BASIC code calls a DOS one.
-- Use a modern Impulse Tracker parser when the program calls a DOS one.
-- Use the mouse position from a game engine when DOS mouse position memory address is read (There is some kind of multiplication necessary on one axis, so the output should be divided by 2 before returned to the program).
-- ...You get the idea.
+- Use a modern Impulse Tracker parser and sound system when the program calls a DOS IT player.
+- Use the mouse position from a modern game engine.
+- Provide settings to enable various HLE behaviors such as:
+  - Make shape commands (such as `CIRCLE`) draw vector or oversampled shapes.
+- Underclocking! This makes programs work properly that otherwise could not. Making a DOSBOX just to underclock BASIC is overkill. So underclocking should be in the interpreter itself.
 
-Targets:
-- QBasic 1.1 subset
-  - baseline: my games
-- QuickBASIC 4.5 subset
-  - baseline: DarkDread games
+
+Related projects:
+- https://github.com/Poikilos/bwsb
+
+## Roadmap
+0.1 BASIC lexer
+   - See https://github.com/Hierosoft/qbhle/issues/1 for details and status.
+0.9 QBasic 1.1 subset
+   - baseline: my games
+1.0 QuickBASIC 4.5 subset
+   - baseline: DarkDread games
