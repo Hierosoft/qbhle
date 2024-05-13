@@ -32,3 +32,6 @@ Related projects:
   - baseline: https://github.com/Hierosoft/qjak
 - [ ] 1.0 QuickBASIC 4.5 subset
   - baseline: DarkDread games
+
+### Other ideas:
+- See [Issues](https://github.com/Hierosoft/qbhle/issues) tagged with "enhancement"
