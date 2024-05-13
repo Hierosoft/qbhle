@@ -14,11 +14,21 @@ High-level emulation (HLE) means avoiding overhead & complexity of emulating low
 
 Related projects:
 - https://github.com/Poikilos/bwsb
+  - Probably (the GDM parser part only) should be rewritten in Python and then use high-level calls to play samples.
+    - Or just convert everything to ogg manually and use such files if present...HLE at its finest.
+- [PC-BASIC](https://github.com/robhagemans/pcbasic) (Python!) "interpreter for GW-BASIC, Advanced BASIC (BASICA), PCjr Cartridge Basic and Tandy 1000 GWBASIC. It interprets these BASIC dialects with a high degree of accuracy, aiming for bug-for-bug compatibility" using pysdl2
+  - Uses a custom parser
+  - "runs plain-text, tokenised and protected .BAS files"
+  - "implements floating-point arithmetic in the Microsoft Binary Format (MBF) and can therefore read and write binary data files created by GW-BASIC"
+- QB64: Very good modern QBasic compiler, but requires slight changes to programs since behavior slightly varies from QBasic 1.1:
+  - `CHAIN` (switching to another BAS file) doesn't work
+  - Runs `SOUND` commands asynchronously (my programs requires sync calls since sounds are sometimes used as precise delays)
+
 
 ## Roadmap
-0.1 BASIC lexer
-   - See https://github.com/Hierosoft/qbhle/issues/1 for details and status.
-0.9 QBasic 1.1 subset
-   - baseline: my games
-1.0 QuickBASIC 4.5 subset
-   - baseline: DarkDread games
+- [ ] 0.1 lex & parse BASIC
+  - See https://github.com/Hierosoft/qbhle/issues/1 for details and status.
+- [ ] 0.9 QBasic 1.1 subset
+  - baseline: https://github.com/Hierosoft/qjak
+- [ ] 1.0 QuickBASIC 4.5 subset
+  - baseline: DarkDread games
