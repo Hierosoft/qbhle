@@ -1,0 +1,61 @@
+[build-system]
+# requires = ["hatchling"]
+# build-backend = "hatchling.build"
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+dynamic = ["version"]
+name = "qbhle"
+description = "QB High Level Emulator."
+dependencies = [
+  "sly@git+https://github.com/dabeaz/sly",
+  "numpy",
+]
+authors = [
+  {name = "Jake Gustafson"},
+#   {name = "Jake Gustafson", email = "name@example.com"},
+]
+readme = "readme.md"
+# ^ Format is detected by extension: md for "GitHub-flavored Markdown",
+# rst for "reStructuredText (without Sphinx extensions)"
+# -<https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#readme>
+license = {file = "license.txt"}
+keywords = ["QBASIC", "BASIC", "emulator", "interpreter", "compiler", "parser"]
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 3 - Alpha",
+
+  # Indicate who your project is intended for
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Build Tools",
+
+  # Pick your license as you wish (see also "license" above)
+  "License :: OSI Approved :: MIT License",
+
+  # Specify the Python versions you support here.
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "qbhle.__version__"}
+
+# [project.optional-dependencies]
+# gui = []
+# cli = [
+#   "rich",
+#   "click",
+# ]
+
+# [project.scripts]
+# qbhle-cli = "qbhle:main_cli"
+
+# [project.gui-scripts]
+# qbhle = "qbhle.pgqbhle:main"

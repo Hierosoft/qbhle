@@ -1,0 +1,5 @@
+include qbhle/*.py
+include qbhle/assets/basicres/*.*
+include qbhle/assets/videorom/*.*
+include license.txt
+include readme.md
