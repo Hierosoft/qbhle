@@ -59,3 +59,10 @@ version = {attr = "qbhle.__version__"}
 
 # [project.gui-scripts]
 # qbhle = "qbhle.pgqbhle:main"
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
+# F821 "Undefined name ..." (constant) is ok in SLY lexer tokens set:
+"qbhle/qblexer.py" = ["F821"]
+# (^ Does not ignore PyLance reportUndefinedVariable,
+# so see special comment in file for that).
