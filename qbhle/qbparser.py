@@ -39,11 +39,11 @@ class QBParser(Parser):
         ('left', EQ, NE, LT, LE, GT, GE),
         ('left', PLUS, MINUS),
         ('left', TIMES, DIVIDE, IDIVIDE, MOD),  # MODULUS),
-        ('left', CARET),  # NOT same as EXP function
+        ('left', CARET),  # Exponent operator *differs* from EXP function
         ('left', LPAREN, RPAREN),
         # ('right', SUFFIX_TYPE_STRING, SUFFIX_TYPE_SHORT, SUFFIX_TYPE_LONG, SUFFIX_TYPE_SINGLE, SUFFIX_TYPE_DOUBLE),
         # ^ QB unary type specifiers
-        ('right', UMINUS),
+        ('right', UMINUS),  # '-' is used as negative sign not MINUS here
     )
 
     def __init__(self):
