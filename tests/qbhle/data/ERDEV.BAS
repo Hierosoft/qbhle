@@ -1,7 +1,5 @@
-"""
-Error handling example from
-https://www.qbasic.net/en/reference/qb11/Statement/ON-ERROR.htm
-"""
+' Error handling example from
+' https://www.qbasic.net/en/reference/qb11/Statement/ON-ERROR.htm
 'Illustrates ERDEV, ERDEV$, ERL, ERR, ERROR, ON ERROR, and RESUME.
    ON ERROR GOTO Handler
 10 CHDIR "a:\"                'Causes ERR 71 "Disk not ready"
