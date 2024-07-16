@@ -33,10 +33,10 @@ class QBParser(Parser):
 
     # TODO: Add COMMA to precedence?
     # 2-character ones *must* come 1st if 1st char has it's own meaning:
-    precedence = (
-        ('nonassoc', LT, GT),
+    precedence = (  # noqa: F821
+        ('nonassoc', LT, GT, EQ, NE, LE, GE),
         ('left', IF, ELSE, ELSEIF, END),
-        ('left', EQ, NE, LT, LE, GT, GE),
+        # ('left', EQ, NE, LT, LE, GT, GE),
         ('left', PLUS, MINUS),
         ('left', TIMES, DIVIDE, IDIVIDE, MOD),  # MODULUS),
         ('left', CARET),  # Exponent operator *differs* from EXP function
@@ -48,161 +48,309 @@ class QBParser(Parser):
 
     def __init__(self):
         self.functions = { }
-        self.qb = QBProcess()
-
-    @_('functions function')
+        self.core = QBProcess()
+    """
+    @_('functions function')  # noqa: F821 # type: ignore[reportUndefinedVariable]
     def functions(self, p):
         pass
 
-    @_('function')
-    def functions(self, p):
+    @_('function')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def functions(self, p):  # noqa: F811
         pass
 
-    @_('function_decl SUB expr')
+    @_('function_decl SUB expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
     def function(self, p):
         self.function.block_end()
         self.function = None
 
-    @_('function_decl SUB expr STATIC')
-    def function(self, p):
+    @_('function_decl SUB expr STATIC')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def function(self, p):  # noqa: F811
         self.function.block_end()
         self.function = None
+    """
+
+    def _types(self, p, set_locals):
+        types = []
+        for n, name in enumerate(p.parms):
+            if set_locals:
+                self.locals[name] = n  # same as commented dict comprehension
+            types.append(self.core.type(name))
+        return types
 
     # TODO: Forward declaration--which can be followed by any of:
     # - ()
     # - (argument(s))
     # - nothing
-    @_('function_decl DECLARE SUB expr ()')
-    def function(self, p):
+    @_('DECLARE SUB ID LPAREN RPAREN')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def sub_decl_no_parms(self, p):  # noqa: F811
         """Forward declaration with no arguments
 
         Example: DECLARE SUB LoadMaps ()
         """
+        is_decl = True
+        types = []
+        self.function = self.core.add_sub(p.ID, types)
         self.function.block_end()
         self.function = None
 
-    @_('function_decl DECLARE SUB expr (expr)')
-    def function(self, p):
-        """Forward declaration with argument(s)
-
-        Example: DECLARE SUB ShowLevel (Level%)
-        """
-        self.function.block_end()
-        self.function = None
-
-    @_('DECLARE FUNCTION NAME LPAREN parms RPAREN',
-       'FUNCTION NAME LPAREN parms RPAREN')
-    def function_decl(self, p):
+    @_('DECLARE SUB ID LPAREN parms RPAREN')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def sub_decl(self, p):
+        is_decl = True
         # self.locals = { name:n for n, name in enumerate(p.parms) }
-        # TODO: Why map to number? (See expr.py)
+        # TODO: Why make value a number (from expr.py)?
+        types = self._types(p, not is_decl)
+        self.function = self.core.add_sub(p.ID, types)
+        self.functions[p.ID] = self.function
+
+    @_('SUB ID LPAREN parms RPAREN')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def sub_def(self, p):
+        is_decl = False
+        self.locals = {}
+        types = self._types(p, not is_decl)
+        # self.function = self.core.add_function(p.ID, [np.float16]*len(p.parms), [np.float16])
+        self.function = self.core.add_sub(p.ID, types)
+        self.functions[p.ID] = self.function
+
+    #   'SUB ID LPAREN RPAREN')  # TODO: add as 2nd regex if allowed in QB
+    @_('SUB ID')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def sub_def_no_parms(self, p):
+        is_decl = False
+        types = []
+        # self.function = self.core.add_function(p.ID, [np.float16]*len(p.parms), [np.float16])
+        self.function = self.core.add_sub(p.ID, types)
+        self.functions[p.ID] = self.function
+
+    @_('DECLARE FUNCTION ID LPAREN RPAREN')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def function_decl_no_parms(self, p):  # noqa: F811
+        is_decl = True
+        types = []
+        return_type = self.core.type(p.ID, is_decl=is_decl)
+        self.function = self.core.add_function(p.ID, types, [return_type])
+        self.functions[p.ID] = self.function
+
+    @_('DECLARE FUNCTION ID LPAREN parms RPAREN')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def function_decl(self, p):  # noqa: F811
+        is_decl = True
+        types = self._types(p, not is_decl)
+        return_type = self.core.type(p.ID, is_decl=is_decl)
+        self.function = self.core.add_function(p.ID, types, [return_type])
+        self.functions[p.ID] = self.function
+
+    # 'FUNCTION ID LPAREN RPAREN')  # TODO: add as 2nd regex if allowed in qb
+    @_('FUNCTION ID')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def function_def_no_parms(self, p):  # noqa: F811
+        is_decl = False
         self.locals = {}
         types = []
-        for n, name in enumerate(p.parms):
-            self.locals[name] = n  # same as commented dict comprehension
-            types.append(self.qb.type(name))
-        # self.function = self.emu.add_function(p.NAME, [np.float16]*len(p.parms), [np.float16])
-        return_type = self.qb.type(p.NAME, is_decl=True)
-        self.function = self.qb.add_function(p.NAME, types, [return_type])
-        self.functions[p.NAME] = self.function
+        return_type = self.core.type(p.ID)
+        self.function = self.core.add_function(p.ID, types, [return_type])
+        self.functions[p.ID] = self.function
 
-    @_('DECLARE FUNCTION NAME LPAREN RPAREN',
-       'FUNCTION NAME LPAREN RPAREN')
-    def function_decl(self, p):
-        self.locals = { }
-        return_type = self.qb.type(p.NAME, is_decl=True)
-        self.function = self.qb.add_function(p.NAME, [], [return_type])
-        self.functions[p.NAME] = self.function
+    @_('PRINT ID')
+    def print(self, p):
+        print("[PRINT ID] {}".format(p.ID))
 
-    @_('parms COMMA parm')
+    @_('PRINT LITERAL')
+    def print(self, p):
+        print("[PRINT LITERAL] {}".format(p.LITERAL))
+
+    @_('PRINT parms')
+    def print(self, p):
+        for value in p.parms:
+            print("[PRINT parms] {}".format(value))
+
+    @_('FUNCTION ID LPAREN parms RPAREN')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def function_def(self, p):  # noqa: F811
+        is_decl = False
+        self.locals = {}
+        types = self._types(p, not is_decl)
+        return_type = self.core.type(p.ID)
+        self.function = self.core.add_function(p.ID, types, [return_type])
+        self.functions[p.ID] = self.function
+
+    @_('parms COMMA parm')  # noqa: F821 # type: ignore[reportUndefinedVariable]
     def parms(self, p):
         return p.parms + [p.parm]
 
-    @_('parm')
-    def parms(self, p):
+    @_('parm')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def parms(self, p):  # noqa: F811
         return [ p.parm ]
 
-    @_('NAME')
-    def parm(self, p):
-        print("NAME={}".format(p.NAME))
-        return p.NAME
-
-    @_('expr PLUS expr')
-    def expr(self, p):
+    @_('expr PLUS expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.add()
         return p.expr0 + p.expr1
 
-    @_('expr MINUS expr')
-    def expr(self, p):
+    @_('expr MINUS expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.sub()
         return p.expr0 - p.expr1
 
-    @_('expr TIMES expr')
-    def expr(self, p):
+    @_('expr TIMES expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.mul()
         return p.expr0 * p.expr1
 
-    @_('expr DIVIDE expr')
-    def expr(self, p):
+    @_('expr DIVIDE expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.div_s()
         return p.expr0 / p.expr1
 
-    @_('expr LT expr')
-    def expr(self, p):
+    @_('expr LT expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.lt_s()
         return p.expr0 < p.expr1
 
-    @_('expr LE expr')
-    def expr(self, p):
+    @_('expr LE expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.le_s()
         return p.expr0 <= p.expr1
 
-    @_('expr GT expr')
-    def expr(self, p):
+    @_('expr GT expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.gt_s()
         return p.expr0 > p.expr1
 
-    @_('expr GE expr')
-    def expr(self, p):
+    @_('expr GE expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.ge_s()
         return p.expr0 >= p.expr1
 
-    @_('expr EQ expr')
-    def expr(self, p):
+    @_('expr EQ expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.eq()
         return p.expr0 == p.expr1
 
-    @_('NAME EQ expr')
-    def expr(self, p):
+    @_('ID EQ expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.eq()
-        return p.expr0 = p.expr1
+        # return p.expr0 = p.expr1
+        # TODO: could be function return! Example: `SaveAs% = 1` inside SaveAs%
+        print("[ID EQ expr] dir(p.expr0):{}".format(dir(p.expr0)))
+        self.function.eq(p.ID, p.expr0.value)
 
-    @_('expr NE expr')
-    def expr(self, p):
+    @_('expr NE expr')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         # self.function.i32.ne()
         return p.expr0 != p.expr1
 
-    @_('LPAREN expr RPAREN')
-    def expr(self, p):
+    @_('LPAREN expr RPAREN')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         return p.expr
 
-    @_('MINUS expr %prec UMINUS')
-    def expr(self, p):
+    @_('MINUS expr %prec UMINUS')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def expr(self, p):  # noqa: F811
         return -p.expr
 
-    # TODO: Finish this (See example/expr.py in sly)
+    @_('LITERAL')
+    def expr(self, p):
+        if "." in p.LITERAL:
+            # NOTE: QB floats are 32 and 64
+            self.function.f64.const(np.float64(p.LITERAL))
+        else:
+            # NOTE: QB ints are 16 and 32
+            self.function.i32.const(np.int32(p.LITERAL))
+
+    @_('ID')  # noqa: F821 # type: ignore[reportUndefinedVariable]
+    def parm(self, p):
+        # TODO: could be a function call (but has to be RValue to be a call?)
+        print("ID={}".format(p.ID))
+        return p.ID
+
+    @_('ID LPAREN exprlist RPAREN')
+    def expr(self, p):
+        self.function.call(self.functions[p.ID])
+
+    @_('ID LPAREN RPAREN')
+    def expr(self, p):
+        self.function.call(self.functions[p.ID])
+
+    # @_('IF expr thenexpr ELSE expr')
+    # def expr(self, p):
+    #     self.function.block_end()
+    # TODO: ^ Is there a ternary operation of any sort in QBASIC?
+
+    # TODO: IF condition THEN statements [ELSE statements]
+
+    @_('exprlist COMMA expr')
+    def exprlist(self, p):
+        pass
+
+    @_('expr')
+    def exprlist(self, p):
+        pass
+
+    # @_('startthen expr')
+    # def thenexpr(self, p):
+    #     self.function.else_start()
+    # ^ Symbol 'startthen' used, but not defined as a token or a rule
+
+    # @_('THEN')
+    # def startthen(self, p):
+    #     self.function.if_start(wasm.i32)
+
+def run_file(path):
+    lexer = QBLexer()
+    lexer.path = path
+    # Only public method is "tokenize" which generates Token instances.
+    with open(path, 'r', encoding='ascii') as file:
+        lines = [line for line in file]
+        # ^ Do *not* do `.rstrip()`, since \n is important in QB!
+    parser = QBParser()
+    parser.path = path
+    parser.core.lines = lines
+    # parser.core.line_index = 0
+    # data = ""
+    # while (parser.core.line_index + 1) < len(lines):
+    #     data += lines[parser.core.line_index]
+    #     parser.core.line_index += 1
+    # parser.parse(lexer.tokenize(data))
+    # return 0
+    parser.core.line_index = 0
+    print("len(lines)={}".format(len(lines)))
+    while parser.core.line_index < len(lines):
+        unmodified_index = parser.core.line_index
+        data = lines[parser.core.line_index]
+        if not data.strip():
+            print('[run_file] line {} is blank'
+                .format(parser.core.line_index+1))
+            parser.core.line_index += 1
+            continue
+        if not data.endswith("\n"):
+            # raise NotImplementedError("The lexer needs the newline.")
+            data += "\n"
+            logger.info("{}, line {}: No newline at end of file."
+                        .format(path, parser.core.line_index+1))
+        print('[run_file] line {} tokens:'
+              .format(parser.core.line_index+1))
+        # print("{}".format(dir(lexer))); break
+        lexer.lineno = 0
+        for tok in lexer.tokenize(data):  # for debug only
+            print('  type=`{}`, value={}({})'
+                  .format(tok.type, type(tok.value).__name__,
+                          tok.value))
+        # TODO: a number at the start of a line sets the numbering arbitrarily!
+        # ^ line_index may not be lineno-1!
+
+        parser.parse(lexer.tokenize(data))
+        # ^ May override current line index using:
+        # - GOSUB (as opposed to CALL)
+        #   - or the SUB's RETURN having a number after it
+        # - GOTO
+        # Therefore only increment conditionally:
+        if parser.core.line_index == unmodified_index:
+            parser.core.line_index += 1
+        # parser.restart()  # TODO: find out how to fix line after statement! Then indent into `if`
+    print("Done (parser.core.line_index={})".format(parser.core.line_index))
+    return 0
 
 
-if __name__ == '__main__':
+def main():
     import sys
     if len(sys.argv) != 2:
         raise SystemExit(f'Usage: {sys.argv[0]} <BAS file>')
+    return run_file(sys.argv[1])
 
-    lexer = QBLexer()
-    # Only public method is "tokenize" which generates Token instances.
-    for tok in lexer.tokenize(data):
-        print('type=%r, value=%r' % (tok.type, tok.value))
-    raise NotImplementedError()
-    parser = QBParser()
-    parser.parse(lexer.tokenize(open(sys.argv[1]).read()))
 
-    name = sys.argv[1].split('.')[0]
+if __name__ == '__main__':
+    sys.exit(main())

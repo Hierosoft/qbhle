@@ -3,6 +3,7 @@ import re
 import numpy as np
 
 from qbhle.qbfunction import QBFunction
+from qbhle.qbsub import QBSub
 
 class QBProcess:
     PY_TYPE_FOR_SUFFIXES = {
@@ -29,8 +30,12 @@ class QBProcess:
     def __init__(self):
         self._default_suffix = "!"
         self._default_suffix_of_regex = {}
+        self.symbols = {}
         self.functions = {}
+        self.subs = {}
         # TODO: bare DEF* statements set default_suffix
+        self.line_index = -1
+        self.lines = None
 
     def set_def_type(self, statement, *args):
         suffix = QBProcess.STATEMENT_TO_SUFFIX[statement]
@@ -58,7 +63,16 @@ class QBProcess:
             _type = QBProcess.PY_TYPE_FOR_SUFFIXES[self.default_suffix(name)]
         return _type
 
-    def add_function(self, name, arg_types, return_type):
+    def add_function(self, name, arg_types, return_type, is_decl):
         qf = QBFunction(name, arg_types, return_type)
-        self.functions[name] = qf  # See also functions in Parser subclass
+        if not is_decl:
+            self.functions[name] = qf  # See also functions in Parser subclass
+        self.symbols[name] = qf
+        return qf
+
+    def add_sub(self, name, arg_types, is_decl):
+        qf = QBSub(name, arg_types)
+        if not is_decl:
+            self.subs[name] = qf  # See also functions in Parser subclass
+        self.symbols[name] = qf
         return qf
