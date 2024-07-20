@@ -206,10 +206,10 @@ class QBLexer(Lexer):
     # TODO: UNARY TYPE DECORATORS
     #   (Symbol right of variable makes it statically typed):
     # SUFFIX_TYPE_STRING = r'$'
-    # SUFFIX_TYPE_SHORT = r'%'  # 2-byte short int
-    # SUFFIX_TYPE_LONG = r'&'  # 4-byte long int
-    # SUFFIX_TYPE_SINGLE = r'!'  # 4-byte float (default)
-    # SUFFIX_TYPE_DOUBLE = r'#'  # 8-byte float
+    # SUFFIX_TYPE_SHORT = r'%'  # 2-byte 16-bit short int
+    # SUFFIX_TYPE_LONG = r'&'  # 4-byte 32-bit long int
+    # SUFFIX_TYPE_SINGLE = r'!'  # 4-byte 32-bit float (default)
+    # SUFFIX_TYPE_DOUBLE = r'#'  # 8-byte 64-bit float
     # ^ See also QBProcess.PY_TYPE_FOR_SUFFIXES
     # TODO: STRING * n%	A fixed-length string variable n% bytes long.
     UMINUS = r'-'  # negative sign before a number
